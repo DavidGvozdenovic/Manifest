@@ -70,7 +70,7 @@ let sessionToken = '';
 async function api<T>(route: string, body: unknown): Promise<T> {
   const res = await fetch(`${SERVER}${route}`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'X-F2A-Token': sessionToken },
+    headers: { 'Content-Type': 'application/json', 'X-Manifest-Token': sessionToken },
     body: JSON.stringify(body),
   });
   const text = await res.text();
@@ -266,7 +266,7 @@ export function App() {
         append(`${tr('image')} ${i + 1}/${assets.length}: ${note ? resizeLine(note) : `${(asset.bytes.length / 1e6).toFixed(1)} MB`}`);
         const res = await fetch(`${SERVER}/asset/${asset.ref}`, {
           method: 'POST',
-          headers: { 'X-F2A-Token': sessionToken },
+          headers: { 'X-Manifest-Token': sessionToken },
           body: new Blob([asset.bytes as Uint8Array<ArrayBuffer>]),
         });
         if (!res.ok) throw new Error(`upload ${asset.ref}: ${res.status}`);
@@ -305,8 +305,8 @@ export function App() {
       ];
       const zip = zipStore(files);
       const base = (doc.source.fileName || 'export').replace(/[\\/:*?"<>|]+/g, '-');
-      downloadBytes(`${base}.f2a`, zip);
-      append(`${tr('saved')} ${base}.f2a`);
+      downloadBytes(`${base}.manifest`, zip);
+      append(`${tr('saved')} ${base}.manifest`);
     } catch (e) {
       append(`${tr('saveFailed')}: ${e instanceof Error ? e.message : String(e)}`);
     }
@@ -332,6 +332,7 @@ export function App() {
       </label>
     </div>
   );
+  const credit = <div className="credit muted">Manifest by davidflow</div>;
   const logView = (
     <div className="log" ref={logRef}>
       {log.map((l, i) => (
@@ -440,6 +441,7 @@ export function App() {
         )}
         {actions}
         {logView}
+        {credit}
       </div>
     );
   }
@@ -552,6 +554,7 @@ export function App() {
         {busy ? tr('preparing') : options.colorMode === 'CMYK' ? `${tr('prepareColors')} (${selection.count})` : `${tr('prepare')} (${selection.count})`}
       </button>
       {logView}
+      {credit}
     </div>
   );
 }

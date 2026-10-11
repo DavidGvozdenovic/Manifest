@@ -1,6 +1,6 @@
 # SOP — Figma → Illustrator (1:1, editabilno, spremno za štampu)
 
-Radni naziv: **FigmaToIllustrator (F2A)**
+Javni naziv: **Manifest by davidflow** (ranije F2A / FigmaToIllustrator)
 Referenca: [Battle Axe Overlord](https://battleaxe.co/overlord) (funkcija „Figma → Illustrator“, v2.9.0)
 
 ---
@@ -11,7 +11,7 @@ Referenca: [Battle Axe Overlord](https://battleaxe.co/overlord) (funkcija „Fig
 |---|---|
 | Korisnici | Javno — Figma Community + potpisan `.zxp` (Win i Mac); nema Adobe Exchange u v1 |
 | Okruženje | Windows i macOS, Illustrator 2022+ (CEP / CSXS 9–12), Figma desktop |
-| Repo | GitHub + Releases (`F2A-x.y.z.zxp`); vidi `docs/publish.md` |
+| Repo | GitHub + Releases (`Manifest-x.y.z.zxp`); vidi `docs/publish.md` |
 | Overlord | Nemamo ga — poređenje samo sa Figma SVG/PDF/paste baseline-om |
 | Štampa | Veliki format, vizitkarte/flajeri/posteri, brand materijali |
 | Prioritet MVP-a | Boje za štampu + editabilan tekst + fotografije |
@@ -34,7 +34,7 @@ npm run install:cep      # linkuje Illustrator panel + PlayerDebugMode
 npm run dev              # watch mode za Figma plugin
 ```
 
-1. Restartuj Illustrator → `Window > Extensions > F2A — Figma to Illustrator` (panel mora biti otvoren, pokreće server na `localhost:7531`).
+1. Restartuj Illustrator → `Window > Extensions > Manifest` (servis kreće u pozadini; panel je opcion za log / import).
 2. Figma desktop → `Plugins > Development > Import plugin from manifest…` → `packages/figma-plugin/manifest.json`.
 3. Selektuj frame-ove → pokreni plugin → „Pošalji u Illustrator“.
 
@@ -47,7 +47,7 @@ Builder (`packages/ai-panel/jsx/builder.jsx`) se učitava iznova pri svakom slan
 - **M1 (gotovo, 11.10.2026):** transport, artboard-i sa bleed-om iz „Trimbox“ slice-a, raspored artboard-a, clip frame-ova i maski, rect/vector/boolean-kao-path/ellipse, solid fill, fotografije (fill/fit/crop, embed), tekst sa stilom po karakteru i rotacijom/skew-om. Testirano na stranici 1 Celje brošure.
 - **M2 boje (gotovo, 11.10.2026):** pre slanja plugin prikazuje sve boje (Figma hex → proof iz Illustratora, CMYK, ΔE2000). Auto CMYK = ICC konverzija Illustratora, pa pretraga najbliže štampljive boje (TAC ≤ 300%) kad ΔE > 1; sive/crna opciono samo na K. Ručni CMYK, ime swatch-a i spot po hex-u se pamte u `figma.clientStorage`. U Ai postaju globalni (ili spot) swatch-evi. `/convert` prosleđuje i `proof` payload.
 - **M6 (delimično):** linear/radial fill; inside/outside stroke (dupla debljina + clip). Angular/diamond i live Pathfinder još nisu. Efekti (shadow/blur) se i dalje preskaču.
-- **Publish (11.10.2026):** Save/Import `.f2a`, session token, EN/SR UI, invisible CEP service, `npm run pack:zxp`. Vidi `docs/publish.md` i `docs/roadmap.md`.
+- **Publish (11.10.2026):** Save/Import `.manifest`, session token, EN/SR UI, invisible CEP service, `npm run pack:zxp`. Vidi `docs/publish.md` i `docs/roadmap.md`.
 - **Bleed:** auto (iz Trimbox-a) ili ručno u mm. `DocumentPreset.documentBleedOffsetRect` Ai ignoriše (proveren bag) → `jsx/bleed.jsx` snima prazan dokument kao nekompresovan .ai, upiše `Bleed*Value` (uz ispravku PDF `/Length` i xref ofseta) i otvori ga kao .ait šablon.
 - ExtendScript zamka: ugnježdeni ternarni operator (`a ? b : c ? d : e`) se pogrešno parsira — koristiti if/else.
 - ExtendScript zamka: `TextFont` objekti zastare dok Ai učitava fontove (PARM greška) — font uzimati sveže preko `app.textFonts.getByName()`.
@@ -183,7 +183,7 @@ Puna definicija živi u `packages/schema` i verzioniše se (`irVersion`).
 3. Šalji iz UI iframe-a (main thread nema mrežu):
    - `manifest.json`: `networkAccess.devAllowedDomains: ["http://localhost:7531"]`, za objavu `allowedDomains` + `reasoning`.
    - Veliki payload: prvo slike (`POST /asset/:hash`), pa JSON (`POST /build`).
-4. Fallback ako server nije dostupan: „Save .f2a“ (zip `document.json` + `assets/`) i **Import .f2a** u panelu.
+4. Fallback ako server nije dostupan: „Save .manifest“ (zip `document.json` + `assets/`) i **Import .manifest** u panelu.
 
 ---
 
@@ -193,7 +193,7 @@ Puna definicija živi u `packages/schema` i verzioniše se (`irVersion`).
 - `localhost:7531`, CORS `Access-Control-Allow-Origin: *` (Figma iframe ima `null` origin).
 - Za Figma web u Chrome-u dodati `Access-Control-Allow-Private-Network: true` na preflight.
 - Payload se piše u temp folder; ExtendScript dobija samo putanju (ne slati MB stringova kroz `evalScript`).
-- `com.f2a.illustrator.service` je nevidljiva ekstenzija (`StartOn: applicationActivate`) — HTTP server živi i kad panel nije otvoren. Vidljivi panel služi za log i Import .f2a. POST zahteva `X-F2A-Token` iz `GET /ping`.
+- `com.davidflow.manifest.service` je nevidljiva ekstenzija (`StartOn: applicationActivate`) — HTTP server živi i kad panel nije otvoren. Vidljivi panel služi za log i Import .manifest. POST zahteva `X-Manifest-Token` iz `GET /ping`.
 
 **ExtendScript builder — mapiranje**
 
@@ -257,7 +257,7 @@ Opcije u UI panela (podrazumevane vrednosti u zagradi):
 
 - Figma: Community (besplatan plugin) — `allowedDomains: ["http://localhost:7531"]` + `reasoning`. Copy: `docs/community-listing.md`.
 - Illustrator: potpisan `.zxp` (`npm run pack:zxp` + `ZXPSignCmd`), instalacija preko Anastasiy / ZXPInstaller. Ne Adobe Exchange u v1.
-- `.f2a` fallback kad panel nije dostupan.
+- `.manifest` fallback kad panel nije dostupan.
 - Kasnije: UXP ili Tauri hub — `docs/roadmap.md`. Ne raditi hub dok CEP još radi.
 
 ---

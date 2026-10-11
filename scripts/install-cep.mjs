@@ -4,7 +4,7 @@ import { existsSync, lstatSync, mkdirSync, symlinkSync, unlinkSync } from 'node:
 import { homedir } from 'node:os';
 import { join, resolve } from 'node:path';
 
-const ID = 'com.f2a.illustrator';
+const ID = 'com.davidflow.manifest';
 const source = resolve('packages/ai-panel');
 
 const extensions =
@@ -29,4 +29,4 @@ for (const v of [9, 10, 11, 12]) {
     execSync(`defaults write com.adobe.CSXS.${v} PlayerDebugMode 1`);
   }
 }
-console.log('PlayerDebugMode enabled (dev only). Restart Illustrator — F2A starts in the background, or open Window > Extensions > F2A.');
+console.log('PlayerDebugMode enabled (dev only). Restart Illustrator — Manifest starts in the background, or open Window > Extensions > Manifest.');

@@ -1,11 +1,11 @@
-# F2A roadmap (after the first public build)
+# Manifest roadmap (after the first public build)
 
 ## Done in this pass
 
-- Invisible CEP service (`com.f2a.illustrator.service`) starts with Illustrator so the panel does not have to stay open
+- Invisible CEP service (`com.davidflow.manifest.service`) starts with Illustrator so the panel does not have to stay open
 - Linear and radial gradient fills
 - Inside / outside strokes (double-width + clip / send-to-back)
-- Save / Import `.f2a`, session token, English UI + Serbian locale
+- Save / Import `.manifest`, session token, English UI + Serbian locale
 
 ## Still later (M6 leftovers)
 

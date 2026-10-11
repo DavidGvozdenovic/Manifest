@@ -1,6 +1,6 @@
 {
-  "name": "F2A — Figma to Illustrator",
-  "id": "f2a-figma-to-illustrator",
+  "name": "Manifest",
+  "id": "manifest-by-davidflow",
   "api": "1.0.0",
   "main": "dist/code.js",
   "ui": "dist/ui.html",
@@ -9,6 +9,6 @@
   "networkAccess": {
     "allowedDomains": ["http://localhost:7531"],
     "devAllowedDomains": ["http://localhost:7531"],
-    "reasoning": "Talks only to the F2A panel on this computer (http://localhost:7531) so selected frames can be built in Adobe Illustrator. Artwork never leaves the machine."
+    "reasoning": "Talks only to the Manifest panel on this computer (http://localhost:7531) so selected frames can be built in Adobe Illustrator. Artwork never leaves the machine."
   }
 }

@@ -1,4 +1,4 @@
-/* CEP panel (mixed context: browser + Node.js). Receives F2A-IR from the Figma plugin and runs the ExtendScript builder. */
+/* Manifest panel (mixed context: browser + Node.js). Receives IR from the Figma plugin and runs the ExtendScript builder. */
 const http = require('http');
 const fs = require('fs');
 const os = require('os');
@@ -7,7 +7,7 @@ const crypto = require('crypto');
 
 const PORT = 7531;
 const MAX_BODY = 1024 * 1024 * 1024;
-const ROOT = path.join(os.tmpdir(), 'f2a');
+const ROOT = path.join(os.tmpdir(), 'manifest');
 const ASSETS = path.join(ROOT, 'assets');
 const SESSION = path.join(ROOT, 'session.json');
 const ASSET_NAME = /^[0-9a-f]{16,64}\.(png|jpg|gif)$/i;
@@ -95,7 +95,7 @@ let token = crypto.randomBytes(24).toString('hex');
 let ownsServer = false;
 
 function authorized(req) {
-  const header = req.headers['x-f2a-token'];
+  const header = req.headers['x-manifest-token'];
   return header && header === token;
 }
 
@@ -151,7 +151,7 @@ function unzipStore(buf) {
     const locName = dv.getUint16(localOff + 26, true);
     const locExtra = dv.getUint16(localOff + 28, true);
     const start = localOff + 30 + locName + locExtra;
-    if (method !== 0) throw new Error('compressed .f2a is not supported');
+    if (method !== 0) throw new Error('compressed .manifest is not supported');
     files.push({ name, data: Buffer.from(buf.subarray(start, start + comp)) });
     off += 46 + nameLen + extra + comment;
   }
@@ -161,7 +161,7 @@ function unzipStore(buf) {
 async function importF2a(buf) {
   const files = unzipStore(buf);
   const docFile = files.find((f) => /(^|\/)document\.json$/i.test(f.name));
-  if (!docFile) throw new Error('document.json missing from .f2a');
+  if (!docFile) throw new Error('document.json missing from .manifest');
   const doc = JSON.parse(docFile.data.toString('utf8'));
   for (const file of files) {
     const base = path.posix.basename(file.name.replace(/\\/g, '/'));
@@ -177,7 +177,7 @@ async function handle(req, res) {
 
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-F2A-Token');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-Manifest-Token');
   res.setHeader('Access-Control-Allow-Private-Network', 'true');
   if (req.method === 'OPTIONS') return res.end();
 
@@ -259,7 +259,7 @@ async function adoptExistingServer() {
   if (!data.ok) throw new Error(`port ${PORT} is in use`);
   if (data.token) token = data.token;
   setReady(`Ready — service on localhost:${PORT}`);
-  log('Using the F2A service that started with Illustrator.');
+  log('Using the Manifest service that started with Illustrator.');
 }
 
 function listen() {

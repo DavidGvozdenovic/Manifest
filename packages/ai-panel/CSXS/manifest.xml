@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<ExtensionManifest Version="7.0" ExtensionBundleId="com.f2a.illustrator" ExtensionBundleVersion="0.1.0" ExtensionBundleName="F2A" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<ExtensionManifest Version="7.0" ExtensionBundleId="com.davidflow.manifest" ExtensionBundleVersion="0.1.0" ExtensionBundleName="Manifest" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <ExtensionList>
-    <Extension Id="com.f2a.illustrator.panel" Version="0.1.0" />
-    <Extension Id="com.f2a.illustrator.service" Version="0.1.0" />
+    <Extension Id="com.davidflow.manifest.panel" Version="0.1.0" />
+    <Extension Id="com.davidflow.manifest.service" Version="0.1.0" />
   </ExtensionList>
   <ExecutionEnvironment>
     <HostList>
@@ -16,7 +16,7 @@
     </RequiredRuntimeList>
   </ExecutionEnvironment>
   <DispatchInfoList>
-    <Extension Id="com.f2a.illustrator.panel">
+    <Extension Id="com.davidflow.manifest.panel">
       <DispatchInfo>
         <Resources>
           <MainPath>./index.html</MainPath>
@@ -31,7 +31,7 @@
         </Lifecycle>
         <UI>
           <Type>Panel</Type>
-          <Menu>F2A — Figma to Illustrator</Menu>
+          <Menu>Manifest</Menu>
           <Geometry>
             <Size>
               <Height>360</Height>
@@ -41,7 +41,7 @@
         </UI>
       </DispatchInfo>
     </Extension>
-    <Extension Id="com.f2a.illustrator.service">
+    <Extension Id="com.davidflow.manifest.service">
       <DispatchInfo>
         <Resources>
           <MainPath>./index.html</MainPath>

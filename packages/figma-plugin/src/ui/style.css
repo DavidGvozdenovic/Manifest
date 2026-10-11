@@ -258,6 +258,11 @@ button.icon {
   gap: 2px;
 }
 
+.credit {
+  font-size: 10px;
+  text-align: right;
+}
+
 .log {
   flex: 1;
   min-height: 60px;

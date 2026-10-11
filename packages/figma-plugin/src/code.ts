@@ -4,7 +4,7 @@ import { serializeSelection, type ExportFrame } from './serialize';
 
 figma.showUI(__html__, { width: 460, height: 720, themeColors: true });
 
-const SETTINGS_KEY = 'f2a.settings';
+const SETTINGS_KEY = 'manifest.settings';
 const TRIMBOX = /^trim\s*box$/i;
 
 type UIMessage =

@@ -28,7 +28,7 @@ const files = walk(source).map((full) => ({
 
 const dist = join(root, 'dist');
 mkdirSync(dist, { recursive: true });
-const zxp = join(dist, `F2A-${version}.zxp`);
+const zxp = join(dist, `Manifest-${version}.zxp`);
 writeFileSync(zxp, zipStore(files));
 console.log(`Wrote ${zxp} (${files.length} files, unsigned)`);
 
@@ -44,7 +44,7 @@ if (cert && existsSync(cert)) {
     mkdirSync(dirname(dest), { recursive: true });
     writeFileSync(dest, file.data);
   }
-  const signed = join(dist, `F2A-${version}-signed.zxp`);
+  const signed = join(dist, `Manifest-${version}-signed.zxp`);
   try {
     execFileSync(signCmd, ['-sign', staging, signed, cert, pass], { stdio: 'inherit' });
     cpSync(signed, zxp);

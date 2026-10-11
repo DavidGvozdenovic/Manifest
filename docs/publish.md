@@ -1,4 +1,4 @@
-# Publish F2A (Windows + macOS)
+# Publish Manifest (Windows + macOS)
 
 End users should never run `npm`. Ship two artifacts: the Figma Community plugin and a `.zxp` for Illustrator.
 
@@ -11,7 +11,7 @@ npm run typecheck
 npm run pack:zxp
 ```
 
-`dist/F2A-0.1.0.zxp` is the Illustrator package (unsigned unless you sign it).
+`dist/Manifest-0.1.0.zxp` is the Illustrator package (unsigned unless you sign it).
 
 ## 2. Sign the ZXP (required for strangers)
 
@@ -56,7 +56,7 @@ Desktop is the supported client. Figma web may be blocked by Private Network Acc
 After the `.zxp` is signed:
 
 ```bash
-gh release create v0.1.0 dist/F2A-0.1.0.zxp --title "F2A 0.1.0" --notes-file docs/community-listing.md
+gh release create v0.1.0 dist/Manifest-0.1.0.zxp --title "Manifest 0.1.0" --notes-file docs/community-listing.md
 ```
 
 Attach the zxp only (not the unsigned zip) unless you are publishing a dev snapshot.
@@ -64,7 +64,7 @@ Attach the zxp only (not the unsigned zip) unless you are publishing a dev snaps
 ## 5. What to tell users
 
 - Figma desktop + Illustrator 2022+ on the **same** computer
-- Illustrator must be running so the background F2A service can listen
+- Illustrator must be running so the background Manifest service can listen
 - Fonts must be installed in Illustrator
 - Bleed is written with a documented `.ai` patch; if a future Illustrator build breaks it, set bleed by hand
 - CEP will not last forever — see [roadmap.md](roadmap.md)
