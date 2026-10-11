@@ -1,0 +1,54 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      body {
+        margin: 0;
+        padding: 10px;
+        font: 12px/1.4 system-ui, sans-serif;
+        color: #ddd;
+        background: #323232;
+      }
+      #status {
+        padding: 6px 8px;
+        border-radius: 4px;
+        font-weight: 600;
+        background: #6b2b2b;
+      }
+      #status.on {
+        background: #2b5b33;
+      }
+      .bar {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .import {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        color: #bbb;
+      }
+      #log {
+        margin-top: 10px;
+        height: calc(100vh - 110px);
+        overflow: auto;
+        font: 11px ui-monospace, monospace;
+        white-space: pre-wrap;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="bar">
+      <div id="status">Starting server…</div>
+      <label class="import">
+        Import .f2a
+        <input type="file" id="import" accept=".f2a,.zip" />
+      </label>
+    </div>
+    <div id="log"></div>
+    <script src="main.js"></script>
+  </body>
+</html>

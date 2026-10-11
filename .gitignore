@@ -1,0 +1,11 @@
+node_modules/
+dist/
+*.log
+.DS_Store
+fixtures/out/
+certs/
+tools/
+*.p12
+*.pfx
+*.pem
+.rnd

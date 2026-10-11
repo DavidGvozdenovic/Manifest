@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ExtensionList>
+  <Extension Id="com.f2a.illustrator.panel">
+    <HostList>
+      <Host Name="ILST" Port="8088" />
+    </HostList>
+  </Extension>
+  <Extension Id="com.f2a.illustrator.service">
+    <HostList>
+      <Host Name="ILST" Port="8089" />
+    </HostList>
+  </Extension>
+</ExtensionList>

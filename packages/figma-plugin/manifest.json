@@ -1,0 +1,14 @@
+{
+  "name": "F2A — Figma to Illustrator",
+  "id": "f2a-figma-to-illustrator",
+  "api": "1.0.0",
+  "main": "dist/code.js",
+  "ui": "dist/ui.html",
+  "editorType": ["figma"],
+  "documentAccess": "dynamic-page",
+  "networkAccess": {
+    "allowedDomains": ["http://localhost:7531"],
+    "devAllowedDomains": ["http://localhost:7531"],
+    "reasoning": "Talks only to the F2A panel on this computer (http://localhost:7531) so selected frames can be built in Adobe Illustrator. Artwork never leaves the machine."
+  }
+}

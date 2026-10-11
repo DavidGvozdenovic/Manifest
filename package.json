@@ -1,0 +1,15 @@
+{
+  "name": "figma-to-illustrator",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run build -w @f2a/figma-plugin",
+    "dev": "npm run dev -w @f2a/figma-plugin",
+    "typecheck": "tsc -p packages/figma-plugin",
+    "install:cep": "node scripts/install-cep.mjs",
+    "pack:zxp": "node scripts/pack-zxp.mjs"
+  }
+}
