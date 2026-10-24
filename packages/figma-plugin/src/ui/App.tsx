@@ -5,6 +5,9 @@ import { fitAssetsToPpi, resizeLine } from './images';
 import { ppiLabel, t, type Locale } from './i18n';
 import { downloadBytes, zipStore } from './zip';
 import { formatMm, PAPERS, paperById, recommendPpi, type PageMeasure, type Ppi } from '../paper';
+import mark from './mark.png';
+
+const SITE = 'https://www.davidflow.com';
 
 const SERVER = 'http://localhost:7531';
 
@@ -64,6 +67,10 @@ const VISIBLE_DE = 5;
 
 const proofKey = (c: CMYK, hex: string) => `${c.join(',')}|${hex}`;
 const post = (pluginMessage: unknown) => parent.postMessage({ pluginMessage }, '*');
+const openSite = (event: { preventDefault(): void }) => {
+  event.preventDefault();
+  post({ type: 'open-site', url: SITE });
+};
 
 let sessionToken = '';
 
@@ -260,6 +267,7 @@ export function App() {
       return;
     }
     try {
+      assets = assets.map((a) => ({ ...a }));
       const notes = await fitAssetsToPpi(doc, assets, doc.options.ppi ?? 300);
       for (const [i, asset] of assets.entries()) {
         const note = notes.find((n) => n.ref === asset.ref);
@@ -289,16 +297,27 @@ export function App() {
   async function sendWithColors() {
     if (!pending) return;
     setBusy(true);
-    const doc = pending.doc.options.colorMode === 'CMYK' ? applyColors(pending.doc, effective) : pending.doc;
-    await send(doc, pending.assets);
-    setBusy(false);
+    try {
+      const doc = pending.doc.options.colorMode === 'CMYK' ? applyColors(pending.doc, exportColor) : pending.doc;
+      await send(doc, pending.assets);
+    } catch (e) {
+      append(`${tr('error')}: ${e instanceof Error ? e.message : String(e)}`);
+    } finally { setBusy(false); }
+  }
+
+  // Keep the original RGB paint when conversion is unavailable. Illustrator
+  // will convert it with its ICC profile on import; never substitute black.
+  function exportColor(hex: string) {
+    const value = effective(hex);
+    return { ...value, cmyk: overrides[hex]?.cmyk || autos[hex] ? value.cmyk : undefined,
+      spot: overrides[hex]?.spot };
   }
 
   async function saveF2a() {
     if (!pending) return;
     setBusy(true);
     try {
-      const doc = pending.doc.options.colorMode === 'CMYK' ? applyColors(pending.doc, effective) : pending.doc;
+      const doc = pending.doc.options.colorMode === 'CMYK' ? applyColors(pending.doc, exportColor) : pending.doc;
       const files = [
         { name: 'document.json', data: new TextEncoder().encode(JSON.stringify(doc)) },
         ...pending.assets.map((asset) => ({ name: `assets/${asset.ref}`, data: asset.bytes })),
@@ -321,6 +340,8 @@ export function App() {
   }
 
   const status = (
+    <>
+    <header className="brand"><img className="brand-mark" src={mark} alt="" /><div><strong>Manifest</strong><small>FIGMA → ILLUSTRATOR</small></div><a className="brand-by" href={SITE} target="_blank" rel="noreferrer" onClick={openSite}>by @davidflow.com</a></header>
     <div className="top">
       <div className={`status ${online ? 'on' : 'off'}`}>{online ? tr('online') : tr('offline')}</div>
       <label className="lang">
@@ -331,10 +352,19 @@ export function App() {
         </select>
       </label>
     </div>
+    <div className="steps"><span className={!pending ? 'active' : ''}>01 {locale === 'sr' ? 'Priprema' : 'Prepare'}</span><i/><span className={pending ? 'active' : ''}>02 {locale === 'sr' ? 'Pregled i prenos' : 'Review & transfer'}</span></div>
+    </>
   );
-  const credit = <div className="credit muted">Manifest by davidflow</div>;
+  const credit = (
+    <div className="credit muted">
+      Manifest{' '}
+      <a href={SITE} target="_blank" rel="noreferrer" onClick={openSite}>
+        by @davidflow.com
+      </a>
+    </div>
+  );
   const logView = (
-    <div className="log" ref={logRef}>
+    <div className={`log ${log.length ? '' : 'empty'}`} ref={logRef} role="log" aria-live="polite">
       {log.map((l, i) => (
         <div key={i}>{l}</div>
       ))}
@@ -451,6 +481,8 @@ export function App() {
     <div className="app">
       {status}
 
+      <div className="selection-card"><span className="eyebrow">{locale === 'sr' ? 'SELEKCIJA' : 'YOUR SELECTION'}</span><strong>{selection.count ? `${selection.count} ${locale === 'sr' ? 'frame-ova spremno' : 'frames ready'}` : locale === 'sr' ? 'Izaberi frame u Figmi' : 'Select a frame in Figma'}</strong><span title={selection.names.join(', ')}>{selection.names.join(' · ') || (locale === 'sr' ? 'Pripremi dizajn za sledeći korak.' : 'Bring your design into its next chapter.')}</span></div>
+
       <label>
         {tr('colorMode')}
         <select value={options.colorMode} onChange={(e) => setOption({ colorMode: e.target.value as BuildOptions['colorMode'] })}>
@@ -550,7 +582,7 @@ export function App() {
         {tr('embedImages')}
       </label>
 
-      <button disabled={busy || selection.count === 0} onClick={exportSelection}>
+      <button className="primary-action" disabled={!loaded || busy || selection.count === 0} onClick={exportSelection}>
         {busy ? tr('preparing') : options.colorMode === 'CMYK' ? `${tr('prepareColors')} (${selection.count})` : `${tr('prepare')} (${selection.count})`}
       </button>
       {logView}

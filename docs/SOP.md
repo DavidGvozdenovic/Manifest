@@ -25,6 +25,36 @@ Posledice:
 
 ---
 
+## Presek (24.10.2026)
+
+Jedan izvor istine je repo `C:\Users\david\.cursor\FigmaToIllustrator`. GitHub: [DavidGvozdenovic/Manifest](https://github.com/DavidGvozdenovic/Manifest). Grana `main` prati `origin/main`. Objavljena verzija je **v0.1.0** (11.10.2026). Artefakt te verzije je `dist/Manifest-0.1.0.zxp` (potpisana kopija `dist/Manifest-0.1.0-signed.zxp`). Na Desktopu stoji ista kopija `Manifest-0.1.0.zxp`. Stariji paketi `dist/F2A-0.1.0*` su od pre preimenovanja u Manifest i ne idu u sledeći release.
+
+| Šta | Gde |
+|---|---|
+| Figma development plugin | samo `packages/figma-plugin/manifest.json` |
+| Figma Community id | `1691139184578069124` |
+| Illustrator panel | ceo `packages/ai-panel`, linkovan u `%APPDATA%\Adobe\CEP\extensions\com.davidflow.manifest` |
+| Servis | `localhost:7531` (zeleno **Ready** u panelu) |
+| Builder | `packages/ai-panel/jsx/builder.jsx`, učitava se pri svakom slanju |
+
+`npm run install:cep` pravi taj link i uključuje `PlayerDebugMode`. U Illustratoru se plugin ne bira fajlom. `Window > Extensions > Manifest` otvara panel. **Choose File** / **Import .manifest** uvozi sačuvan crtež (zip sa `document.json` i `assets/`) kad Figma ne šalje direktno.
+
+Kopija `Desktop\Manifest` (samo `manifest.json` + `dist` od 11.10.2026, bajt-identična repo buildu) obrisana je 24.10.2026. U Figmi je bio drugi development unos na tu putanju, sa istim Community id-jem, pa su oba pisala **In review**. Taj unos je uklonjen. Drugi development plugin sa istim id-jem se ne dodaje.
+
+### Na `main`, još nije GitHub release
+
+Izmene su snimljene na `main`. Objavljeni GitHub release je i dalje **v0.1.0**. Sledeći artefakt je **0.1.1**: `npm run pack:zxp`, pa `gh release create v0.1.1`.
+
+Figma Community update ide iz desktopa, sa ovog istog manifesta: Figma meni → Plugins → Manage plugins → kod Manifest izaberi **Publish new version** (ako nema te stavke, prvo **Locate local version** na `packages/figma-plugin/manifest.json`). Id `1691139184578069124` mora ostati. Dok je badge **In review**, nova verzija ide u isti review.
+
+1. `packages/figma-plugin/manifest.json` — `id` je produkcioni `1691139184578069124`. `networkAccess` je `http://localhost:7531` i `https://www.davidflow.com` (byline).
+2. `packages/ai-panel/jsx/builder.jsx` — stroke bez filla (`INSIDE` / `OUTSIDE`) više ne pravi praznu clip grupu. `makeClipping` ostavlja `clipping = false` i izlazi ako grupa ima manje od dva objekta. Putanja sa `clipping = true` bez prave maske skrivala je clip iznad sebe. Otvorena linija (meni crte) sa inside/outside stroke-om crta se kao center stroke; linija nema unutrašnjost, pa bi clip obrisao crtu.
+3. `packages/figma-plugin/src/serialize.ts` — frejm rotiran 90° (brošura `NIJE DOBAR`, lokalno A4 portret, na canvasu pejzaž) dobija artboard veličine koju vidiš (859×612), a ne 0×0 i ne uspravan portret sa sadržajem na boku. Koordinate ostaju apsolutne.
+
+Posle izmene Figma plugin traži `npm run build`. Builder važi čim Illustrator primi sledeći `POST /build`.
+
+---
+
 ## Pokretanje (dev)
 
 ```powershell
@@ -34,8 +64,8 @@ npm run install:cep      # linkuje Illustrator panel + PlayerDebugMode
 npm run dev              # watch mode za Figma plugin
 ```
 
-1. Restartuj Illustrator → `Window > Extensions > Manifest` (servis kreće u pozadini; panel je opcion za log / import).
-2. Figma desktop → `Plugins > Development > Import plugin from manifest…` → `packages/figma-plugin/manifest.json`.
+1. Restartuj Illustrator → `Window > Extensions > Manifest` (servis kreće u pozadini; panel je opcion za log / import). Radi kad piše **Ready — service on localhost:7531**.
+2. Figma desktop → `Plugins > Development > Import plugin from manifest…` → `C:\Users\david\.cursor\FigmaToIllustrator\packages\figma-plugin\manifest.json`. Samo ovaj fajl.
 3. Selektuj frame-ove → pokreni plugin → „Pošalji u Illustrator“.
 
 Builder (`packages/ai-panel/jsx/builder.jsx`) se učitava iznova pri svakom slanju — izmene ne traže restart Illustratora. Panel debug: `http://localhost:8088` u Chrome-u.
@@ -52,6 +82,7 @@ Builder (`packages/ai-panel/jsx/builder.jsx`) se učitava iznova pri svakom slan
 - ExtendScript zamka: ugnježdeni ternarni operator (`a ? b : c ? d : e`) se pogrešno parsira — koristiti if/else.
 - ExtendScript zamka: `TextFont` objekti zastare dok Ai učitava fontove (PARM greška) — font uzimati sveže preko `app.textFonts.getByName()`.
 - **Fade maske (11.10.2026):** Figma ALPHA maska sa gradientom (npr. bela 100% → 0%) postaje živi CMYK gradient overlay u boji pozadine (`GradientStop.opacity`). Slika ostaje zamenljiva. VECTOR maska + jedna solid boja (QR tačke) se pojednostavi u tu geometriju, bez clip-a.
+- **Presek 24.10.2026:** jedan Figma manifest (repo), Desktop duplikat obrisan. v0.1.0 je i dalje poslednji GitHub release. Dva frejma `NIJE DOBAR`: brošura rotirana 90° ide u pejzaž artboard koji vidiš na canvasu; meni linije sa inside stroke-om ostaju vidljive. Plugin je ponovo buildovan (`packages/figma-plugin/dist`).
 
 ---
 
@@ -134,7 +165,7 @@ FigmaToIllustrator/
 └─ fixtures/             test fajlovi + očekivani rezultati
 ```
 
-- Monorepo (pnpm workspaces), TypeScript svuda.
+- Monorepo (npm workspaces), TypeScript svuda. `pnpm` nije instaliran.
 - `schema` paket je jedini ugovor između Figme i Illustratora — obe strane ga importuju.
 - Bolt CEP: uključiti Node (`--enable-nodejs`), target Illustrator 2022+.
 - ExtendScript nema `JSON` — Bolt CEP to rešava; inače dodati `json2.js` polyfill.

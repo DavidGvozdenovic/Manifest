@@ -1,14 +1,14 @@
 {
   "name": "Manifest",
-  "id": "manifest-by-davidflow",
+  "id": "1691139184578069124",
   "api": "1.0.0",
   "main": "dist/code.js",
   "ui": "dist/ui.html",
   "editorType": ["figma"],
   "documentAccess": "dynamic-page",
   "networkAccess": {
-    "allowedDomains": ["http://localhost:7531"],
-    "devAllowedDomains": ["http://localhost:7531"],
-    "reasoning": "Talks only to the Manifest panel on this computer (http://localhost:7531) so selected frames can be built in Adobe Illustrator. Artwork never leaves the machine."
+    "allowedDomains": ["http://localhost:7531", "https://www.davidflow.com"],
+    "devAllowedDomains": ["http://localhost:7531", "https://www.davidflow.com"],
+    "reasoning": "Talks only to the Manifest panel on this computer (http://localhost:7531) so selected frames can be built in Adobe Illustrator. The byline opens https://www.davidflow.com. Artwork never leaves the machine."
   }
 }

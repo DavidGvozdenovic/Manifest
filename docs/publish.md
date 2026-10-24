@@ -45,7 +45,7 @@ Do **not** start with Adobe Exchange — review is slow and CEP is being retired
 
 1. Open the plugin in Figma desktop → publish from the plugin manifest.
 2. Figma assigns a numeric production id — paste it into `packages/figma-plugin/manifest.json` `id` and rebuild.
-3. `networkAccess.allowedDomains` must stay `http://localhost:7531` with the existing `reasoning`.
+3. `networkAccess.allowedDomains` stays `http://localhost:7531` and `https://www.davidflow.com` (the byline). Keep the `reasoning` in the manifest.
 4. Paste [community-listing.md](community-listing.md) into the Community form (English).
 5. Screenshots: plugin color step + resulting Illustrator artboards.
 

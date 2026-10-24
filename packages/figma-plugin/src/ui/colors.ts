@@ -90,14 +90,14 @@ export function autoCmyk(auto: AutoColor, neutralsToK: boolean, method: AutoMeth
   return method === 'icc' ? auto.icc : auto.cmyk;
 }
 
-export function applyColors(doc: IRDocument, choice: (hex: string) => { cmyk: CMYK; spot: boolean; name?: string }): IRDocument {
+export function applyColors(doc: IRDocument, choice: (hex: string) => { cmyk?: CMYK; spot?: boolean; name?: string }): IRDocument {
   const out: IRDocument = structuredClone(doc);
   const paintLists = (list: IRPaint[]) => {
     for (const p of list) {
       if (p.type === 'solid') {
         const c = choice(hexOf(p.color));
         p.cmyk = c.cmyk;
-        p.spot = c.spot;
+        if (c.spot !== undefined) p.spot = c.spot;
         if (c.name) p.swatch = c.name;
       } else if (p.type === 'linear' || p.type === 'radial') {
         if (p.swatch) {
@@ -114,7 +114,7 @@ export function applyColors(doc: IRDocument, choice: (hex: string) => { cmyk: CM
         if (!r.fill) return;
         const c = choice(hexOf(r.fill.color));
         r.fill.cmyk = c.cmyk;
-        r.fill.spot = c.spot;
+        if (c.spot !== undefined) r.fill.spot = c.spot;
         if (c.name) r.fill.swatch = c.name;
       });
       return;
@@ -123,14 +123,14 @@ export function applyColors(doc: IRDocument, choice: (hex: string) => { cmyk: CM
     n.strokes.forEach((s) => {
       const c = choice(hexOf(s.paint.color));
       s.paint.cmyk = c.cmyk;
-      s.paint.spot = c.spot;
+      if (c.spot !== undefined) s.paint.spot = c.spot;
       if (c.name) s.paint.swatch = c.name;
     });
     if (n.type === 'group') {
       if (n.opacityMask?.reveal) {
         const c = choice(hexOf(n.opacityMask.reveal.color));
         n.opacityMask.reveal.cmyk = c.cmyk;
-        n.opacityMask.reveal.spot = c.spot;
+        if (c.spot !== undefined) n.opacityMask.reveal.spot = c.spot;
         if (c.name) n.opacityMask.reveal.swatch = c.name;
       }
       n.children.forEach(visit);

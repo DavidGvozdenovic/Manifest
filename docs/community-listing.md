@@ -1,6 +1,6 @@
 # Manifest
 
-**Manifest by davidflow**
+**Manifest by [@davidflow.com](https://www.davidflow.com)**
 
 Send selected Figma frames to Adobe Illustrator as editable, print-ready artboards. Everything stays on your computer.
 
@@ -28,7 +28,7 @@ Download the Illustrator panel (`.zxp`) from the project’s GitHub Releases and
 
 ## Privacy
 
-The plugin only contacts `http://localhost:7531` on your machine. Your file is not uploaded to any Manifest server.
+The plugin contacts `http://localhost:7531` on your machine to build the file in Illustrator. The byline opens `https://www.davidflow.com` in your browser. Artwork is not uploaded to any Manifest server.
 
 ## How to use
 

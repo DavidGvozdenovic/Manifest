@@ -110,7 +110,7 @@ async function build(body) {
 
   log(`Building ${doc.artboards.length} artboard(s)…`);
   const started = Date.now();
-  const out = await evalScript(`$.evalFile(${JSON.stringify(BUILDER)}); f2aBuild(${JSON.stringify(file.replace(/\\/g, '/'))});`);
+  const out = await evalScript(`$.evalFile(${JSON.stringify(BUILDER)}, 0); f2aBuild(${JSON.stringify(file.replace(/\\/g, '/'))});`);
   fs.unlink(file, () => {});
   if (!out || out === 'EvalScript error.') throw new Error('ExtendScript error');
   const result = JSON.parse(out);
@@ -126,7 +126,7 @@ async function convert(body) {
       .filter((p) => p && isCmyk(p.cmyk) && isHex(p.hex))
       .map((p) => ({ cmyk: p.cmyk, hex: p.hex })),
   };
-  const out = await evalScript(`$.evalFile(${JSON.stringify(BUILDER)}); f2aConvert(${JSON.stringify(JSON.stringify(clean))});`);
+  const out = await evalScript(`$.evalFile(${JSON.stringify(BUILDER)}, 0); f2aConvert(${JSON.stringify(JSON.stringify(clean))});`);
   if (!out || out === 'EvalScript error.') throw new Error('ExtendScript error');
   return JSON.parse(out);
 }

@@ -259,15 +259,33 @@ var F2A = (function () {
     var ddx = x1 - x0, ddy = y1 - y0;
     var len = Math.sqrt(ddx * ddx + ddy * ddy);
     if (len < EPS) len = 1;
+    var angle = (Math.atan2(ddy, ddx) * 180) / Math.PI;
+    var linear = paint.type !== 'radial';
+    // Illustrator ignores GradientColor.angle and always paints left to right across the object.
+    // Turn the object so that direction is horizontal, apply the fill, then turn it back with the fill.
+    var turned = false;
+    if (linear && Math.abs(angle) > 0.05) {
+      try {
+        item.rotate(-angle, true, true, true, true, Transformation.CENTER);
+        turned = true;
+      } catch (eTurn) {}
+    }
     var gc = new GradientColor();
     gc.gradient = gr;
-    gc.origin = [x0, y0];
-    gc.length = len;
-    gc.angle = (Math.atan2(ddy, ddx) * 180) / Math.PI;
+    if (!linear) {
+      gc.origin = [x0, y0];
+      gc.length = len;
+      gc.angle = angle;
+    }
     var t = styleTargets(item);
     for (i = 0; i < t.length; i++) {
       t[i].filled = true;
       t[i].fillColor = gc;
+    }
+    if (turned) {
+      try {
+        item.rotate(angle, true, true, true, true, Transformation.CENTER);
+      } catch (eBack) {}
     }
   }
 
@@ -325,6 +343,14 @@ var F2A = (function () {
     item.width = paint.rect.w;
     item.height = paint.rect.h;
     item.position = P(paint.rect.x, paint.rect.y);
+    if (paint.corners && paint.rect.w > EPS && paint.rect.h > EPS) {
+      var c = paint.corners, matrix = app.getIdentityMatrix();
+      matrix.mValueA = (c[1][0] - c[0][0]) / paint.rect.w;
+      matrix.mValueB = -(c[1][1] - c[0][1]) / paint.rect.w;
+      matrix.mValueC = -(c[2][0] - c[0][0]) / paint.rect.h;
+      matrix.mValueD = (c[2][1] - c[0][1]) / paint.rect.h;
+      item.transform(matrix, true, true, true, true, 100, Transformation.TOPLEFT);
+    }
     item.name = name;
     if (paint.opacity < 1) item.opacity = paint.opacity * 100;
     if (opts.embedImages) {
@@ -337,6 +363,17 @@ var F2A = (function () {
     return item;
   }
 
+  function shapeIsOpen(shape) {
+    if (!shape || shape.rect || !shape.geometry) return false;
+    var closed = false;
+    var i, j, subs;
+    for (i = 0; i < shape.geometry.length; i++) {
+      subs = shape.geometry[i].subpaths;
+      for (j = 0; j < subs.length; j++) if (subs[j].closed) closed = true;
+    }
+    return !closed;
+  }
+
   /**
    * Draws a shape with its fills and strokes.
    * Simple case: one path. With images or several fills: a clip group
@@ -347,6 +384,10 @@ var F2A = (function () {
     var gradientFills = grads(fills);
     var stroke = strokes.length ? strokes[strokes.length - 1] : null;
     if (strokes.length > 1) warn(name + ': only the top stroke is transferred');
+    // A line has no interior. Inside/outside would clip the stroke away (menu rules).
+    if (stroke && stroke.align !== 'CENTER' && shapeIsOpen(shape)) {
+      stroke = { paint: stroke.paint, weight: stroke.weight, align: 'CENTER', cap: stroke.cap, join: stroke.join, miterLimit: stroke.miterLimit, dashes: stroke.dashes };
+    }
 
     if (!hasImage(fills) && solidFills.length + gradientFills.length <= 1 && (!stroke || stroke.align === 'CENTER')) {
       var item = drawShape(container, shape);
@@ -362,6 +403,26 @@ var F2A = (function () {
         warn(name + ': stroke opacity is not transferred');
       }
       return item;
+    }
+
+    // Stroke and no fill: do not build an empty clip group. Illustrator refuses to
+    // clip a one-item group, and a path left with clipping=true blanks every mask above it.
+    if (!hasImage(fills) && solidFills.length + gradientFills.length === 0 && stroke && stroke.align !== 'CENTER') {
+      var strokeOnly = container.groupItems.add();
+      strokeOnly.name = name;
+      var lineOnly = drawShape(strokeOnly, shape);
+      applyFill(lineOnly, null);
+      var alignedOnly = { paint: stroke.paint, weight: stroke.weight, align: stroke.align, cap: stroke.cap, join: stroke.join, miterLimit: stroke.miterLimit, dashes: stroke.dashes };
+      if (stroke.align === 'INSIDE' || stroke.align === 'OUTSIDE') alignedOnly.weight = stroke.weight * 2;
+      setStroke(lineOnly, alignedOnly, name);
+      if (stroke.align === 'INSIDE') {
+        var strokeOnlyClip = drawShape(strokeOnly, shape);
+        makeClipping(strokeOnly, strokeOnlyClip);
+      } else {
+        lineOnly.zOrder(ZOrderMethod.SENDTOBACK);
+        warn(name + ': outside stroke without a fill is an approximation');
+      }
+      return strokeOnly;
     }
 
     var outer = stroke ? container.groupItems.add() : container;
@@ -401,12 +462,27 @@ var F2A = (function () {
 
   function makeClipping(group, mask) {
     var t = styleTargets(mask);
-    for (var i = 0; i < t.length; i++) {
+    var i;
+    // Never leave clipping=true unless the group actually becomes a mask.
+    // A lone clipping path is not a mask; it hides the artboard clip above it.
+    for (i = 0; i < t.length; i++) {
       t[i].filled = false;
       t[i].stroked = false;
-      t[i].clipping = true;
+      t[i].clipping = false;
     }
-    group.clipped = true;
+    if (group.pageItems.length < 2) return;
+    // An open path cannot clip. Leaving clipping=true on it blanks every mask above it (menu rules).
+    for (i = 0; i < t.length; i++) if (t[i].closed === false) return;
+    try {
+      mask.zOrder(ZOrderMethod.BRINGTOFRONT);
+    } catch (e0) {}
+    try {
+      for (i = 0; i < t.length; i++) t[i].clipping = true;
+      group.clipped = true;
+    } catch (e) {
+      warn('Clipping mask skipped (' + e.message + ')');
+      for (i = 0; i < t.length; i++) t[i].clipping = false;
+    }
   }
 
   // ---------- text ----------
@@ -768,7 +844,7 @@ var F2A = (function () {
       var bg = paintedShape(root, { rect: area, radii: [0, 0, 0, 0] }, ab.fills, [], 'Background');
       bg.name = 'Background';
       var targets = styleTargets(bg);
-      if (targets.length) pageFill = targets[0].fillColor;
+      if (targets.length && targets[0].typename === 'PathItem' && targets[0].filled) pageFill = targets[0].fillColor;
     }
     for (var i = 0; i < ab.children.length; i++) buildNode(root, ab.children[i]);
     if (ab.clip) makeClipping(root, drawShape(root, { rect: area, radii: [0, 0, 0, 0] }));
@@ -816,7 +892,7 @@ var F2A = (function () {
     } finally {
       app.userInteractionLevel = prevLevel;
     }
-    return { ok: true, created: created, warnings: warnings };
+    return { ok: true, created: created, warnings: warnings, builderRevision: '2026-10-24.2' };
   }
 
   // ---------- color preview ----------

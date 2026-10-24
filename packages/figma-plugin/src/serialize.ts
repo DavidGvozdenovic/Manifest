@@ -37,6 +37,31 @@ interface Ctx {
 type Vec = [number, number];
 const EPS = 1e-6;
 
+function transformOf(node: SceneNode): Transform {
+  return node.absoluteTransform;
+}
+
+/** Axis-aligned box of a transformed rectangle. A 90° frame stays the size you see, not 0×0. */
+function boundsOf(m: Transform, w: number, h: number): IRRect {
+  const pts: Vec[] = [
+    [m[0][2], m[1][2]],
+    [m[0][0] * w + m[0][2], m[1][0] * w + m[1][2]],
+    [m[0][0] * w + m[0][1] * h + m[0][2], m[1][0] * w + m[1][1] * h + m[1][2]],
+    [m[0][1] * h + m[0][2], m[1][1] * h + m[1][2]],
+  ];
+  let minX = Infinity;
+  let minY = Infinity;
+  let maxX = -Infinity;
+  let maxY = -Infinity;
+  for (const [x, y] of pts) {
+    minX = Math.min(minX, x);
+    minY = Math.min(minY, y);
+    maxX = Math.max(maxX, x);
+    maxY = Math.max(maxY, y);
+  }
+  return { x: minX, y: minY, w: maxX - minX, h: maxY - minY };
+}
+
 function apply(m: Transform, x: number, y: number, ctx: Ctx): Vec {
   return [
     m[0][0] * x + m[0][1] * y + m[0][2] - ctx.ox,
@@ -164,12 +189,10 @@ async function imagePaint(paint: ImagePaint, node: SceneNode & LayoutMixin, ctx:
   const h = node.height;
 
   let local: IRRect;
+  let crop: Transform | undefined;
   if (paint.scaleMode === 'CROP' && paint.imageTransform) {
-    const t = paint.imageTransform;
-    if (Math.abs(t[0][1]) > EPS || Math.abs(t[1][0]) > EPS) ctx.warnings.push(`${label(node)}: rotated image crop is approximated`);
-    const x0 = -t[0][2] / t[0][0];
-    const y0 = -t[1][2] / t[1][1];
-    local = { x: x0 * w, y: y0 * h, w: (1 / t[0][0]) * w, h: (1 / t[1][1]) * h };
+    crop = invert2x3(paint.imageTransform);
+    local = { x: 0, y: 0, w, h };
   } else {
     if (paint.scaleMode === 'TILE') ctx.warnings.push(`${label(node)}: tiled image placed as FILL`);
     const s = paint.scaleMode === 'FIT' ? Math.min(w / iw, h / ih) : Math.max(w / iw, h / ih);
@@ -178,12 +201,16 @@ async function imagePaint(paint: ImagePaint, node: SceneNode & LayoutMixin, ctx:
   if (paint.rotation) ctx.warnings.push(`${label(node)}: image rotation ${paint.rotation}° is not supported yet`);
   if (paint.filters && Object.values(paint.filters).some((v) => v)) ctx.warnings.push(`${label(node)}: image adjustments (exposure, contrast…) are not transferred`);
 
-  const m = node.absoluteTransform;
-  if (!isAxisAligned(m)) ctx.warnings.push(`${label(node)}: image on rotated layer is placed unrotated`);
-  const [x, y] = apply(m, local.x, local.y, ctx);
-  const placedW = local.w * Math.abs(m[0][0]);
-  const placedH = local.h * Math.abs(m[1][1]);
-  return { type: 'image', ref: asset.ref, opacity: paint.opacity ?? 1, rect: { x, y, w: placedW, h: placedH } };
+  const m = transformOf(node);
+  const corner = (u: number, v: number): Vec => {
+    if (crop) return apply(m, (crop[0][0]*u+crop[0][1]*v+crop[0][2])*w, (crop[1][0]*u+crop[1][1]*v+crop[1][2])*h, ctx);
+    return apply(m, local.x+u*local.w, local.y+v*local.h, ctx);
+  };
+  const corners: [Vec, Vec, Vec] = [corner(0,0), corner(1,0), corner(0,1)];
+  const [x,y] = corners[0];
+  const placedW = Math.hypot(corners[1][0]-x,corners[1][1]-y);
+  const placedH = Math.hypot(corners[2][0]-x,corners[2][1]-y);
+  return { type: 'image', ref: asset.ref, opacity: paint.opacity ?? 1, rect: { x, y, w: placedW, h: placedH }, corners };
 }
 
 async function fillsOf(node: SceneNode, ctx: Ctx): Promise<IRPaint[]> {
@@ -300,7 +327,7 @@ async function serializeText(node: TextNode, ctx: Ctx): Promise<IRTextNode> {
     });
   }
 
-  const m = node.absoluteTransform;
+  const m = transformOf(node);
   const [x, y] = apply(m, 0, 0, ctx);
   return {
     ...base(node),
@@ -325,7 +352,7 @@ function rectGeometry(m: Transform, w: number, h: number, ctx: Ctx): IRGeometry[
 
 /** Geometry of a node, used both for drawing and for mask shapes. */
 function shapeGeometry(node: SceneNode, ctx: Ctx): IRGeometry[] | null {
-  const m = node.absoluteTransform;
+  const m = transformOf(node);
   if (node.type === 'GROUP') {
     const parts = node.children.flatMap((c) => shapeGeometry(c, ctx) ?? []);
     return parts.length ? parts : null;
@@ -346,7 +373,7 @@ function shapeGeometry(node: SceneNode, ctx: Ctx): IRGeometry[] | null {
 
 async function serializeNode(node: SceneNode, ctx: Ctx): Promise<IRNode | null> {
   warnEffects(node, ctx);
-  const m = node.absoluteTransform;
+  const m = transformOf(node);
 
   switch (node.type) {
     case 'SLICE':
@@ -446,7 +473,7 @@ function gradientPaint(p: GradientPaint, node: SceneNode & LayoutMixin, ctx: Ctx
   const radial = p.type === 'GRADIENT_RADIAL';
   const start = radial ? local(0.5, 0.5) : local(0, 0.5);
   const end = local(1, 0.5);
-  const m = node.absoluteTransform;
+  const m = transformOf(node);
   return {
     type: radial ? 'radial' : 'linear',
     opacity: p.opacity ?? 1,
@@ -455,7 +482,7 @@ function gradientPaint(p: GradientPaint, node: SceneNode & LayoutMixin, ctx: Ctx
     stops: p.gradientStops.map((s) => ({
       position: s.position,
       color: { r: s.color.r, g: s.color.g, b: s.color.b },
-      opacity: (s.color.a ?? 1) * (p.opacity ?? 1),
+      opacity: s.color.a ?? 1,
     })),
   };
 }
@@ -494,7 +521,7 @@ function opacityMaskOf(node: SceneNode, ctx: Ctx): IROpacityMask | null {
   ];
   const s = local(0, 0.5);
   const e = local(1, 0.5);
-  const m = node.absoluteTransform;
+  const m = transformOf(node);
   if (!ctx.reveal) ctx.warnings.push(`${label(node)}: fade has no solid color behind it — overlay may be missing`);
   return { from: apply(m, s[0], s[1], ctx), to: apply(m, e[0], e[1], ctx), stops, reveal: ctx.reveal };
 }
@@ -510,7 +537,7 @@ async function serializeChildren(children: readonly SceneNode[], ctx: Ctx): Prom
   const out: IRNode[] = [];
   for (let i = 0; i < children.length; i++) {
     const child = children[i];
-    if ('visible' in child && !child.visible && !('isMask' in child && child.isMask)) continue;
+    if (!child.visible) continue;
     if ('isMask' in child && child.isMask) {
       const clip = shapeGeometry(child, ctx);
       const fade = opacityMaskOf(child, ctx);
@@ -518,13 +545,19 @@ async function serializeChildren(children: readonly SceneNode[], ctx: Ctx): Prom
         ctx.warnings.push(`${label(child)}: mask without geometry ignored`);
         continue;
       }
-      const rest = await serializeChildren(children.slice(i + 1), ctx);
-      // QR-style masks: a solid swatch clipped to many dots is just those dots in that color.
+      // A sibling mask starts a new mask scope, rather than nesting inside this one.
+      let end = i + 1;
+      while (end < children.length && !(children[end].visible && 'isMask' in children[end] && (children[end] as SceneNode & { isMask: boolean }).isMask)) end++;
+      const rest = await serializeChildren(children.slice(i + 1, end), ctx);
+      if (!rest.length) { i = end - 1; continue; }
+      // A solid swatch clipped to many dots (QR codes) is just those dots in that color.
+      // Illustrator keeps only the first subpath of a compound clipping mask, so the dots would become one rectangle.
       if (!fade && clip && rest.length === 1) {
         const paint = solidFillOf(rest[0]);
         if (paint) {
           out.push({ ...base(child), name: child.name, type: 'path', geometry: clip, fills: [paint], strokes: [] });
-          break;
+          i = end - 1;
+          continue;
         }
       }
       out.push({
@@ -537,7 +570,8 @@ async function serializeChildren(children: readonly SceneNode[], ctx: Ctx): Prom
         clipGeometry: clip ?? undefined,
         opacityMask: fade ?? undefined,
       });
-      break;
+      i = end - 1;
+      continue;
     }
     const ir = await serializeNode(child, ctx);
     if (ir) out.push(ir);
@@ -551,21 +585,24 @@ export type ExportFrame = FrameNode | ComponentNode | InstanceNode;
 
 export async function serializeSelection(frames: readonly ExportFrame[], options: BuildOptions): Promise<{ doc: IRDocument; assets: Asset[] }> {
   await loadFontsFor(frames);
-  const ox = Math.min(...frames.map((f) => f.absoluteTransform[0][2]));
-  const oy = Math.min(...frames.map((f) => f.absoluteTransform[1][2]));
-  const ctx: Ctx = { ox, oy, warnings: [], assets: new Map(), ppi: options.ppi ?? 300 };
+  const ctx: Ctx = { ox: 0, oy: 0, warnings: [], assets: new Map(), ppi: options.ppi ?? 300 };
 
   const artboards: IRArtboard[] = [];
+  let offset = 0;
   for (const frame of frames) {
-    const m = frame.absoluteTransform;
-    if (!isAxisAligned(m)) ctx.warnings.push(`${label(frame)}: rotated frame exported unrotated`);
-    const rect = mappedRect(m, frame.width, frame.height, ctx);
+    // Illustrator artboards cannot rotate. Use the box you see on the canvas,
+    // so a 90° frame stays landscape instead of collapsing to 0×0 or turning sideways.
+    const seen = boundsOf(frame.absoluteTransform, frame.width, frame.height);
+    ctx.ox = seen.x - offset;
+    ctx.oy = seen.y;
+    const rect = { x: offset, y: 0, w: seen.w, h: seen.h };
 
     let trim = rect;
     let children: readonly SceneNode[] = frame.children;
     const slice = frame.children.find((c) => c.type === 'SLICE' && TRIMBOX.test(c.name));
     if (options.trimboxFromSlice && slice) {
-      trim = mappedRect(slice.absoluteTransform, slice.width, slice.height, ctx);
+      const box = boundsOf(slice.absoluteTransform, slice.width, slice.height);
+      trim = { x: box.x - ctx.ox, y: box.y - ctx.oy, w: box.w, h: box.h };
       children = frame.children.filter((c) => c !== slice);
     }
 
@@ -581,6 +618,7 @@ export async function serializeSelection(frames: readonly ExportFrame[], options
       children: await serializeChildren(children, ctx),
     });
     ctx.reveal = undefined;
+    offset += seen.w + 60;
   }
 
   return {

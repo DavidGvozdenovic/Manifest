@@ -1,0 +1,60 @@
+{
+  "irVersion": 1,
+  "source": { "fileName": "regression", "pageName": "menu" },
+  "options": { "colorMode": "RGB", "trimboxFromSlice": false, "embedImages": false, "bleedMm": 0, "ppi": 72, "paperFormat": "auto" },
+  "artboards": [
+    {
+      "id": "m",
+      "name": "menu-clip",
+      "rect": { "x": 0, "y": 0, "w": 200, "h": 280 },
+      "trim": { "x": 0, "y": 0, "w": 200, "h": 280 },
+      "clip": true,
+      "fills": [{ "type": "solid", "color": { "r": 0.75, "g": 0.68, "b": 0.58 }, "opacity": 1 }],
+      "children": [
+        {
+          "id": "title",
+          "visible": true,
+          "locked": false,
+          "name": "title",
+          "opacity": 1,
+          "blendMode": "NORMAL",
+          "type": "rect",
+          "rect": { "x": 30, "y": 40, "w": 140, "h": 36 },
+          "radii": [0, 0, 0, 0],
+          "fills": [{ "type": "solid", "color": { "r": 0.56, "g": 0.33, "b": 0.05 }, "opacity": 1 }],
+          "strokes": []
+        },
+        {
+          "id": "rule",
+          "visible": true,
+          "locked": false,
+          "name": "item-divider",
+          "opacity": 1,
+          "blendMode": "NORMAL",
+          "type": "path",
+          "geometry": [
+            {
+              "evenodd": false,
+              "subpaths": [
+                { "closed": false, "points": [[30, 100, 30, 100, 30, 100], [170, 100, 170, 100, 170, 100]] }
+              ]
+            }
+          ],
+          "fills": [],
+          "strokes": [
+            {
+              "paint": { "type": "solid", "color": { "r": 0.12, "g": 0.12, "b": 0.12 }, "opacity": 1 },
+              "weight": 2,
+              "align": "INSIDE",
+              "cap": "NONE",
+              "join": "MITER",
+              "miterLimit": 4,
+              "dashes": []
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "warnings": []
+}

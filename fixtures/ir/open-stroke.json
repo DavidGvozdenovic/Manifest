@@ -1,0 +1,47 @@
+{
+  "irVersion": 1,
+  "source": { "fileName": "regression", "pageName": "lines" },
+  "options": { "colorMode": "RGB", "trimboxFromSlice": false, "embedImages": false, "bleedMm": 0, "ppi": 72, "paperFormat": "auto" },
+  "artboards": [
+    {
+      "id": "a",
+      "name": "rules",
+      "rect": { "x": 0, "y": 0, "w": 400, "h": 160 },
+      "trim": { "x": 0, "y": 0, "w": 400, "h": 160 },
+      "clip": false,
+      "fills": [{ "type": "solid", "color": { "r": 1, "g": 1, "b": 1 }, "opacity": 1 }],
+      "children": [
+        {
+          "id": "line",
+          "visible": true,
+          "locked": false,
+          "name": "item-divider",
+          "opacity": 1,
+          "blendMode": "NORMAL",
+          "type": "path",
+          "geometry": [
+            {
+              "evenodd": false,
+              "subpaths": [
+                { "closed": false, "points": [[40, 80, 40, 80, 40, 80], [360, 80, 360, 80, 360, 80]] }
+              ]
+            }
+          ],
+          "fills": [],
+          "strokes": [
+            {
+              "paint": { "type": "solid", "color": { "r": 0.45, "g": 0.28, "b": 0.12 }, "opacity": 1 },
+              "weight": 2,
+              "align": "INSIDE",
+              "cap": "NONE",
+              "join": "MITER",
+              "miterLimit": 4,
+              "dashes": []
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "warnings": []
+}

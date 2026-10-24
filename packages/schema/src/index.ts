@@ -55,6 +55,8 @@ export interface IRImagePaint {
   opacity: number;
   /** Placement of the full image in artboard space, before clipping. */
   rect: IRRect;
+  /** Unit-square corners in artboard space: top-left, top-right, bottom-left. */
+  corners?: [[number, number], [number, number], [number, number]];
 }
 
 export interface IRGradientStop {

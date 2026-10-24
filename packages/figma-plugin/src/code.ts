@@ -10,7 +10,10 @@ const TRIMBOX = /^trim\s*box$/i;
 type UIMessage =
   | { type: 'ready' }
   | { type: 'export'; options: BuildOptions }
-  | { type: 'save-settings'; settings: unknown };
+  | { type: 'save-settings'; settings: unknown }
+  | { type: 'open-site'; url: string };
+
+const SITE = 'https://www.davidflow.com';
 
 let trimboxFromSlice = true;
 
@@ -54,6 +57,10 @@ figma.ui.onmessage = async (msg: UIMessage) => {
     readTrimboxFlag(stored);
     figma.ui.postMessage({ type: 'settings', settings: stored });
     postSelection();
+    return;
+  }
+  if (msg.type === 'open-site') {
+    if (msg.url === SITE) figma.openExternal(SITE);
     return;
   }
   if (msg.type === 'save-settings') {

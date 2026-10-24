@@ -1,0 +1,66 @@
+{
+  "irVersion": 1,
+  "source": { "fileName": "regression", "pageName": "gradients" },
+  "options": { "colorMode": "RGB", "trimboxFromSlice": false, "embedImages": false, "bleedMm": 0, "ppi": 72, "paperFormat": "auto" },
+  "artboards": [
+    {
+      "id": "g",
+      "name": "gradients",
+      "rect": { "x": 0, "y": 0, "w": 400, "h": 240 },
+      "trim": { "x": 0, "y": 0, "w": 400, "h": 240 },
+      "clip": false,
+      "fills": [{ "type": "solid", "color": { "r": 1, "g": 1, "b": 1 }, "opacity": 1 }],
+      "children": [
+        {
+          "id": "v",
+          "visible": true,
+          "locked": false,
+          "name": "vertical",
+          "opacity": 1,
+          "blendMode": "NORMAL",
+          "type": "rect",
+          "rect": { "x": 40, "y": 30, "w": 100, "h": 180 },
+          "radii": [0, 0, 0, 0],
+          "fills": [
+            {
+              "type": "linear",
+              "opacity": 1,
+              "from": [90, 30],
+              "to": [90, 210],
+              "stops": [
+                { "position": 0, "color": { "r": 0, "g": 0, "b": 0 }, "opacity": 1 },
+                { "position": 1, "color": { "r": 1, "g": 1, "b": 1 }, "opacity": 1 }
+              ]
+            }
+          ],
+          "strokes": []
+        },
+        {
+          "id": "h",
+          "visible": true,
+          "locked": false,
+          "name": "horizontal",
+          "opacity": 1,
+          "blendMode": "NORMAL",
+          "type": "rect",
+          "rect": { "x": 180, "y": 60, "w": 180, "h": 100 },
+          "radii": [0, 0, 0, 0],
+          "fills": [
+            {
+              "type": "linear",
+              "opacity": 1,
+              "from": [180, 110],
+              "to": [360, 110],
+              "stops": [
+                { "position": 0, "color": { "r": 0, "g": 0, "b": 0 }, "opacity": 1 },
+                { "position": 1, "color": { "r": 1, "g": 1, "b": 1 }, "opacity": 1 }
+              ]
+            }
+          ],
+          "strokes": []
+        }
+      ]
+    }
+  ],
+  "warnings": []
+}

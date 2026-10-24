@@ -71,17 +71,21 @@ export async function fitAssetsToPpi(doc: IRDocument, assets: Asset[], ppi: numb
   for (const asset of assets) {
     const need = targets.get(asset.ref);
     if (!need) continue;
-    const tw = Math.max(1, Math.round(need.w));
-    const th = Math.max(1, Math.round(need.h));
+    let tw = Math.max(1, Math.ceil(need.w));
+    let th = Math.max(1, Math.ceil(need.h));
     let bmp: ImageBitmap;
     try {
       bmp = await decode(asset.bytes);
     } catch {
-      notes.push({ ref: asset.ref, from: [0, 0], to: [tw, th], ppi, scaled: 'same', bytesIn: asset.bytes.length, bytesOut: asset.bytes.length });
+      notes.push({ ref: asset.ref, from: [0, 0], to: [tw, th], ppi, scaled: 'same', bytesIn: asset.bytes.length, bytesOut: asset.bytes.length, failed: true });
       continue;
     }
+    // Never invent print detail or distort an asset used at different aspect ratios.
+    const scale = Math.min(1, Math.max(tw / bmp.width, th / bmp.height));
+    tw = Math.max(1, Math.ceil(bmp.width * scale));
+    th = Math.max(1, Math.ceil(bmp.height * scale));
     const close = Math.abs(bmp.width / tw - 1) <= SLACK && Math.abs(bmp.height / th - 1) <= SLACK;
-    if (close) {
+    if (close || asset.ref.toLowerCase().endsWith('.gif')) {
       notes.push({ ref: asset.ref, from: [bmp.width, bmp.height], to: [bmp.width, bmp.height], ppi, scaled: 'same', bytesIn: asset.bytes.length, bytesOut: asset.bytes.length });
       bmp.close();
       continue;

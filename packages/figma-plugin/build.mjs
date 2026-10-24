@@ -19,6 +19,7 @@ const uiOptions = {
   target: 'es2020',
   format: 'iife',
   jsx: 'automatic',
+  loader: { '.png': 'dataurl' },
   minify: !watch,
   define: { 'process.env.NODE_ENV': watch ? '"development"' : '"production"' },
   logLevel: 'info',
